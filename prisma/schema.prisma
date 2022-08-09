@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialActions"]
+}
+
+model User {
+  id            String         @id  @default(uuid())
+  name          String
+  surname       String?
+  middleName    String?
+  email         String?        @unique
+  password      String
+  role          Role?
+  dateOfBirth   DateTime?
+  phone         String?        @unique
+  telegram      String?
+  slack         String?
+  github        String?
+  supervisor    User?          @relation("SupervisorUser", fields: [idSupervisor], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idSupervisor  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now())
+
+  userProject         UserProject[]  @relation("UserProject")
+  developerTask       Task[]         @relation("DeveloperTask")
+  testerTask          Task[]         @relation("TesterTask")
+  userReturn          Return[]       @relation("UserReturn")
+  userWastedHour      WastedHour[]
+  supervisorUser      User[]         @relation("SupervisorUser")
+  userPushTime        PushTime[]
+  userPosition        PositionUser[]
+
+  creatorProject      Project[]
+  creatorUserProject  UserProject[]  @relation("CreatorUserProject")
+  creatorSprint       Sprint[]
+  creatorTask         Task[]         @relation("CreatorTask")
+  creatorReturn       Return[]       @relation("CreatorReturn")
+  creatorComment      Comment[]      @relation("CreatorComment")
+  creatorTimeTask     TimeTask[]
+  creatorEvent        Event[]
+  creatorImage        Image[]
+  creatorFile         File[]
+}
+
+model Project {
+  id            String      @id  @default(uuid())
+  name          String
+  dateStart     DateTime
+  dateFinih     DateTime
+  status        Status
+  type          TypeProject
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  createdBy     User        @relation(fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+
+  userProject    UserProject[]
+  sprint         Sprint[]
+  return         Return[]
+  wastedHour     WastedHour[]
+  comment        Comment[]
+}
+
+model UserProject {
+  id            String      @id  @default(uuid())
+  project       Project     @relation(fields: [idProject], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idProject     String
+  user          User        @relation("UserProject", fields: [idUser], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idUser        String
+  createdAT     DateTime    @default(now())
+  updatedAT     DateTime    @default(now())
+  createdBy     User        @relation("CreatorUserProject", fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+}
+
+model Sprint {
+  id            String      @id  @default(uuid())
+  number        Int
+  project       Project     @relation(fields: [idProject], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idProject     String
+  dateStart     DateTime
+  dateFinish    DateTime
+  status        Status
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  createdBy     User        @relation(fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+
+  task          Task[]
+  return        Return[]
+  wastedHour    WastedHour[]
+  comment       Comment[]
+}
+
+model Task {
+  id            String      @id  @default(uuid())
+  name          String
+  developer     User?       @relation("DeveloperTask", fields: [idDeveloper], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idDeveloper   String?
+  tester        User?       @relation("TesterTask", fields: [idTester], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTester      String?
+  sprint        Sprint      @relation(fields: [idSprint], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idSprint      String
+  status        Status
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  createdBy     User        @relation("CreatorTask", fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+
+  return        Return[]
+  wastedHour    WastedHour[]
+  comment       Comment[]
+  timeTask      TimeTask[]
+  pushTime      PushTime[]
+  image         Image[]
+  file      File[]
+}
+
+model Return {
+  id            String      @id  @default(uuid())
+  user          User        @relation("UserReturn", fields: [idUser], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idUser        String
+  project       Project     @relation(fields: [idProject], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idProject     String
+  sprint        Sprint      @relation(fields: [idSprint], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idSprint      String
+  task          Task        @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String
+  createdAt     DateTime    @default(now())
+  createdBy     User        @relation("CreatorReturn", fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+
+  comment       Comment[]
+}
+
+model WastedHour {
+  id            String      @id  @default(uuid())
+  loss          Float
+  user          User        @relation(fields: [idUser], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idUser        String
+  project       Project     @relation(fields: [idProject], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idProject     String
+  sprint        Sprint      @relation(fields: [idSprint], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idSprint      String
+  task          Task        @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String
+  createdAt     DateTime    @default(now())
+
+  comment       Comment[]
+}
+
+model Comment {
+  id            String      @id  @default(uuid())
+  content       String
+  project       Project?    @relation(fields: [idProject], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idProject     String?
+  sprint        Sprint?     @relation(fields: [idSprint], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idSprint      String?
+  task          Task?       @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String?
+  return        Return?     @relation(fields: [idReturn], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idReturn      String?
+  wastedHour    WastedHour? @relation(fields: [idWastedHour], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idWastedHour  String?
+  PushTime      PushTime?   @relation(fields: [idPushTime], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idPushTime    String?
+  event         Event?      @relation(fields: [idEvent], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idEvent       String?
+  typeComment   TypeComment
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  createdBy     User        @relation("CreatorComment", fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+}
+
+model TimeTask {
+  id            String      @id  @default(uuid())
+  task          Task        @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String      @unique
+  dateStart     DateTime
+  dateFinish    DateTime
+  timeLead      Float
+  currentState  Float       @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  createdBy     User        @relation(fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+}
+
+model PushTime {
+  id            String      @id  @default(uuid())
+  time          Float
+  user          User        @relation(fields: [idUser], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idUser        String
+  task          Task        @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String
+  createdAt     DateTime    @default(now())
+
+  comment       Comment[]
+}
+
+model Event {
+  id            String      @id  @default(uuid())
+  name          String
+  date          DateTime
+  typeEvent     TypeEvent
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  createdBy     User        @relation(fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+  
+  comment       Comment[]
+}
+
+model PositionUser {
+  id            String      @id  @default(uuid())
+  department    TypeDepartment
+  level         Level
+  position      String?
+  user          User        @relation(fields: [idUser], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idUser        String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+}
+
+model Image {
+  id            String    @id @default(uuid())
+  name          String    @unique
+  task          Task      @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String
+  user          User        @relation(fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+  createdAt     DateTime    @default(now())
+}
+
+model File {
+  id            String    @id @default(uuid())
+  name          String    @unique
+  task          Task      @relation(fields: [idTask], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idTask        String
+  user          User        @relation(fields: [idCreator], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  idCreator     String
+  createdAt     DateTime    @default(now())
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  DEVELOPER
+}
+
+enum Status {
+  OPENED
+  CHECKEDIN
+  AWAITINGTESTER
+  AWAITINGTESTING
+  CLOSED
+}
+
+enum TypeProject {
+  PRIVATE
+  PUBLIC
+}
+
+enum TypeComment {
+  PROJECT
+  SPRINT
+  TASK
+  RETURN
+  WASTEDHOUR
+  PUSHTIME
+  EVENT
+}
+
+enum TypeEvent {
+  STAFFMEETING
+  DELIVERYTOTHECUSTOMER
+  DELIVERYTOTHEMANAGER
+}
+
+enum TypeDepartment {
+  MANAGEMENTCOMPANY
+  PROJECTMANGEMNT
+  SALES
+  DESIGN
+  TESTING
+  MOBILEAPPLICATIONSDEVELOPMENT
+  BACKENDDEVELOPMENT
+}
+
+enum Level {
+  INTERN
+  PAIDINTERN
+  JUNIOR
+  JUNIORPLUS
+  MIDDLE
+  MIDDLEPLUS
+  SENIOR
+}
