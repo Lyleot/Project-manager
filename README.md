@@ -1,4 +1,4 @@
 #Project manager
 
 ##Starting
-run `yarn dev` for starting server with hot-reloading
+run `npm run dev` for starting server with hot-reloading
